@@ -33,7 +33,7 @@ git clone https://github.com/ImanMontajabi/CloudflareDNS.git
 # Usage
 To start the application, navigate to the cloned repository's directory on your machine and run the `CloudflareDNS.py` python file:
 ```
-$ python3 CloudflareDNS.py
+python3 CloudflareDNS.py
 ```
 This will launch the main window of the application, which prompts users to enter their email, API token, domain name, zone ID, and DNS record name. Once this information is entered, users can perform actions like List, Create, and Delete DNS records through the respective buttons.
 - Easy-to-use GUI for managing Cloudflare DNS records
