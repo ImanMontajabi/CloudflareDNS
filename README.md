@@ -21,20 +21,20 @@ and:
 $ pip install PyQt6
 ```
 for create .exe file from this code:
-```python
+```
 pip install auto-py-to-exe
 ```
 or easy way:
-```python
+```
 pip install -r requirements.txt
 ```
 Then, clone the repository using git:
-```python
+```
 $ git clone https://github.com/ImanMontajabi/CloudflareDNS.git
 ```
 # Usage
 To start the application, navigate to the cloned repository's directory on your machine and run the `CloudflareDNS.py` python file:
-```python
+```
 $ python3 CloudflareDNS.py
 ```
 This will launch the main window of the application, which prompts users to enter their email, API token, domain name, zone ID, and DNS record name. Once this information is entered, users can perform actions like List, Create, and Delete DNS records through the respective buttons.
