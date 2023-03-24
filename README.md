@@ -7,8 +7,6 @@ The application is built using the Python programming language and the Qt GUI to
 # Table of Contents
 - Installation
 - Usage
-- Features
--Contributing
 - License
 # Installation
 To use CloudflareDNS, Python 3 [installed](https://www.python.org/downloads/) must have on your system. You will need to install the following packages as dependencies:
