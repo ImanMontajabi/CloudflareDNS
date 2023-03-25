@@ -41,4 +41,4 @@ This will launch the main window of the application, which prompts users to ente
 - Can read JSON formatted file and create records accordingly
 - Concurrency through QThread implementation to allow for asynchronous Cloudflare API requests
 # License
-- This project is distributed under the [MIT licence](https://github.com/ImanMontajabi/CloudflareDNS/blob/main/LICENSE)
+This project is distributed under the [MIT licence](https://github.com/ImanMontajabi/CloudflareDNS/blob/main/LICENSE)
