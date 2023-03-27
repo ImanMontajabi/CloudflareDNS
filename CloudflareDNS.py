@@ -205,7 +205,7 @@ class CloudflareDNS(QMainWindow):
         self.listButton.setGeometry(5, 208, 70, 45)
         self.listButton.setFont(QFont("arial", 16))
         self.listButton.clicked.connect(self.list_clicked)
-
+        
         self.createButton = QPushButton("Create", self)        # create button
         self.createButton.setGeometry(95, 208, 70, 45)
         self.createButton.setFont(QFont("arial", 16))
@@ -223,6 +223,8 @@ class CloudflareDNS(QMainWindow):
         self.jsonbutton.setIcon(QIcon(jfile))
         self.jsonbutton.setIconSize(QSize(22, 22))
         self.jsonbutton.clicked.connect(self.get_file_path)
+        self.jsonbutton.clicked.connect(self.refresh_buttons)
+
         
     def get_file_path(self):
         file_dialog = QFileDialog(self)
@@ -234,6 +236,16 @@ class CloudflareDNS(QMainWindow):
     def open_file(self, file_path):
         if file_path:
             self.json_path = file_path
+            self.json_path_create = file_path
+            self.refresh_buttons()
+            
+    def refresh_buttons(self):
+        is_create_enabled = False
+        if self.json_path_create:
+            is_create_enabled = True
+        self.createButton.setEnabled(is_create_enabled)
+
+
 
     def table(self):
         self.tableWidget = QTableWidget(self)
@@ -287,6 +299,8 @@ class CloudflareDNS(QMainWindow):
         self.findChild(QLineEdit, "zone_id").setText(user_data['zone_id'])
         self.findChild(QLineEdit, "domain").setText(user_data['domain'])
         self.findChild(QLineEdit, "name").setText(user_data['ip_dns_record'])
+        self.json_path_create = None
+        self.refresh_buttons()
 
     def get_input_values(self):
         user_data = {}
@@ -327,7 +341,7 @@ class CloudflareDNS(QMainWindow):
         self.listButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.listButton.setEnabled(True))
         self.createButton.setEnabled(False)
-        self.thread.finished.connect(lambda:self.createButton.setEnabled(True))
+        self.thread.finished.connect(lambda:self.refresh_buttons())
         self.deleteButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.deleteButton.setEnabled(True))
         self.jsonbutton.setEnabled(False)
@@ -368,7 +382,7 @@ class CloudflareDNS(QMainWindow):
         self.listButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.listButton.setEnabled(True))
         self.createButton.setEnabled(False)
-        self.thread.finished.connect(lambda:self.createButton.setEnabled(True))
+        self.thread.finished.connect(lambda:self.refresh_buttons())
         self.deleteButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.deleteButton.setEnabled(True))
         self.jsonbutton.setEnabled(False)
