@@ -161,6 +161,8 @@ class CloudflareDNS(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi()
+        self.createButton.setEnabled(False)
+        self.json_path_create = None
         self.thread = QThread()
         self.worker = Worker()
         self.worker.moveToThread(self.thread)
@@ -245,8 +247,6 @@ class CloudflareDNS(QMainWindow):
             is_create_enabled = True
         self.createButton.setEnabled(is_create_enabled)
 
-
-
     def table(self):
         self.tableWidget = QTableWidget(self)
         self.tableWidget.setGeometry(265, 10, 420, 390)
@@ -299,7 +299,6 @@ class CloudflareDNS(QMainWindow):
         self.findChild(QLineEdit, "zone_id").setText(user_data['zone_id'])
         self.findChild(QLineEdit, "domain").setText(user_data['domain'])
         self.findChild(QLineEdit, "name").setText(user_data['ip_dns_record'])
-        self.json_path_create = None
         self.refresh_buttons()
 
     def get_input_values(self):
