@@ -24,14 +24,14 @@ class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(tuple)
     def list(self):
-        self.returunList = []
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
 
         email = user_data['email']
         api_token = user_data['api_token']
         zone_id = user_data['zone_id']
-        ip_name = user_data["ip_dns_record"]
+        domain = user_data['domain']
+        dns_record_name = user_data['ip_dns_record']
         url = f'https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records'
 
 
@@ -40,9 +40,31 @@ class Worker(QObject):
             'X-Auth-Key': api_token,
             'Content-Type': 'application/json'
         }
-        response = requests.request('GET', url, headers=headers
-        )
-        data = response.json()['result']
+        dns_records = []
+        page_num = 1
+        while True:  # loop over all pages
+            params = {'page': page_num, 'per_page': 100}  # update pagination params
+            response = requests.request('GET', url, headers=headers, params=params)
+            data = response.json()['result']
+            if not data:  # no more records to fetch
+                break
+            for record in data:  # add records to the list
+                dns_records.append(record)
+            page_num += 1
+        i_num = 0
+        for record in dns_records:
+            subdomain = record['name']
+            this_domain = record['zone_name']
+            this_dns_record = subdomain.replace(f".{this_domain}", "")
+            if this_dns_record == dns_record_name:
+                content = record['content']
+                i_num += 1
+                self.progress.emit((i_num - 1, subdomain, content,"succeed", ""))
+            self.finished.emit()
+
+
+
+        """
         i_num = 0
         for i in range(len(data)):
             subdomain = data[i]['name']
@@ -50,10 +72,13 @@ class Worker(QObject):
             record_name = subdomain.replace(f".{domain}", "")
             if record_name == ip_name:
                 content = data[i]['content']
-                i_num += 1
-                self.progress.emit((i_num - 1, subdomain, content,"succeed", ""))
+                i_num += 1"""
         
-        self.finished.emit()
+
+
+                #self.progress.emit((i_num - 1, subdomain, content,"succeed", ""))
+        
+        #self.finished.emit()
         # ===================================================================================
     def create(self):
         def scan_to_iplist():
