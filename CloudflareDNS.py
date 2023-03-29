@@ -2,6 +2,7 @@ from PyQt6.QtGui import QIcon, QFont, QPixmap
 from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt
 import sys
 import os
+import re
 import requests
 import json
 from PyQt6.QtWidgets import (
@@ -19,6 +20,7 @@ icon = os.path.join(base_path, './assets/logo.png')
 github = os.path.join(base_path, './assets/github.png')
 twitter = os.path.join(base_path, './assets/twitter.png')
 jfile = os.path.join(base_path, './assets/file.png')
+max_ips = 100
 
 class Worker(QObject):
     finished = pyqtSignal()
@@ -61,6 +63,7 @@ class Worker(QObject):
                 self.progress.emit((i_num, subdomain, content,"succeed", ""))
                 i_num += 1
             self.finished.emit()
+        self.finished.emit()
 # ===================================================================================
     def create(self):
         def scan_to_iplist():
@@ -69,8 +72,20 @@ class Worker(QObject):
             ip_list = [i['ip'] for i in data['workingIPs']]
             f.close()
             return ip_list
+        def linux_scan_to_iplist():
+            with open(self.json_path_create, 'r') as f:
+                data = f.readlines()
+            ips = []
+            for item in data:        # iterate over the list items
+                result = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', item) # extract the IP using regular expression
+                if result:          # check if IP is found and add to the list
+                    ips.append(result.group(0))
+            return ips
         def iplist_to_iptext():
-            iplist = scan_to_iplist()
+            try:
+                iplist = scan_to_iplist()
+            except:
+                iplist = linux_scan_to_iplist()
             with open('ip.txt', 'w') as f:
                     f.write('\n'.join(iplist))
         iplist_to_iptext()
@@ -79,18 +94,27 @@ class Worker(QObject):
                 myip = [line.strip() for line in f]
                 f.close()
                 return myip
+
+        all_ips = ip_list()
+        lenscan = len(all_ips)
         def bestip():
             filename = "best_ip.txt"
-            top100ip = []
-            for i in range(100):
-                top100ip.append(ip_list()[i])
+            topUnder100ip = []
+            
+            ipn = 0
+            while(ipn < lenscan): 
+                topUnder100ip.append(all_ips[ipn])
+                ipn += 1
+                if  ipn >= max_ips:
+                    break
+
             with open(filename, "w") as f:
-                f.write("\n".join(top100ip))
+                f.write("\n".join(topUnder100ip))
             f.close()
         bestip()
         with open("best_ip.txt", "r") as ip:
             lines = ip.readlines()
-        top100ipList = [line.strip() for line in lines]
+        topUnder100ipList = [line.strip() for line in lines]
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
         email = user_data['email']
@@ -105,11 +129,13 @@ class Worker(QObject):
                     "X-Auth-Email": email,
                     "X-Auth-Key": api_token
                 }
-        for i in range(100):
+        ipn = 0
+
+        while(ipn < lenscan):
             data = {
                 "type": "A",
                 "name": params_name,
-                "content": f"{top100ipList[i]}",
+                "content": f"{topUnder100ipList[ipn]}",
                 "ttl": 1,
                 "proxied": False
             }
@@ -117,11 +143,15 @@ class Worker(QObject):
             if response.status_code == 200:
                 subdomain = response.json()["result"]["name"]
                 message_content = response.json()["result"]["content"]
-                self.progress.emit((i, subdomain, message_content,"added", ""))
+                self.progress.emit((ipn, subdomain, message_content,"added", ""))
+                ipn += 1
             if response.status_code == 400:
                 subdomain = f"{record_name}.{domain}"
-                message_content = top100ipList[i]    
-                self.progress.emit((i, subdomain, message_content,"already exist", ""))
+                message_content = topUnder100ipList[ipn]    
+                self.progress.emit((ipn, subdomain, message_content,"already exist", ""))
+                ipn += 1
+                if  ipn >= max_ips:
+                    break
         self.finished.emit()
         # ===================================================================================
     def delete(self):
@@ -172,7 +202,7 @@ class CloudflareDNS(QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
 
         self.browse_dialog = QFileDialog(self)
-        self.browse_dialog.setNameFilter('JSON files (*.json)')
+        self.browse_dialog.setNameFilter('SCAN files (*.json *.cf)')
         self.browse_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         self.browse_dialog.fileSelected.connect(self.open_file)
         file_path = 'user_id.json'
@@ -200,7 +230,6 @@ class CloudflareDNS(QMainWindow):
         self.zone_id()
         self.domain()
         self.name()
-
         self.table()
 
         self.listButton = QPushButton("List", self)        # list button
@@ -219,7 +248,7 @@ class CloudflareDNS(QMainWindow):
         self.deleteButton.setFont(QFont("arial", 16))
         self.deleteButton.clicked.connect(self.delete_clicked)
 
-        self.jsonbutton = QPushButton("result.json", self)   #result.json button
+        self.jsonbutton = QPushButton("resut: .josn | .cf", self)   #result.json button
         self.jsonbutton.setGeometry(5, 160, 250, 45)
         self.jsonbutton.setFont(QFont("arial", 16))
         self.jsonbutton.setIcon(QIcon(jfile))
@@ -230,7 +259,7 @@ class CloudflareDNS(QMainWindow):
         
     def get_file_path(self):
         file_dialog = QFileDialog(self)
-        file_dialog.setNameFilter('JSON files (*.json)')
+        file_dialog.setNameFilter('SCAN files (*.json *.cf)')
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         file_dialog.fileSelected.connect(self.open_file)
         file_dialog.show()
