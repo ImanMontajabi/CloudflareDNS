@@ -150,8 +150,8 @@ class Worker(QObject):
                 message_content = topUnder100ipList[ipn]    
                 self.progress.emit((ipn, subdomain, message_content,"already exist", ""))
                 ipn += 1
-                if  ipn >= max_ips:
-                    break
+            if  ipn >= max_ips:
+                break
         self.finished.emit()
         # ===================================================================================
     def delete(self):
