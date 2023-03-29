@@ -248,7 +248,7 @@ class CloudflareDNS(QMainWindow):
         self.deleteButton.setFont(QFont("arial", 16))
         self.deleteButton.clicked.connect(self.delete_clicked)
 
-        self.jsonbutton = QPushButton("resut: .josn | .cf", self)   #result.json button
+        self.jsonbutton = QPushButton("result: .josn | .cf", self)   #result.json button
         self.jsonbutton.setGeometry(5, 160, 250, 45)
         self.jsonbutton.setFont(QFont("arial", 16))
         self.jsonbutton.setIcon(QIcon(jfile))
