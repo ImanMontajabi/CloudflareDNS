@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QIcon, QFont, QPixmap
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QColor, QPen
 from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt
 import sys
 import os
@@ -205,6 +205,7 @@ class CloudflareDNS(QMainWindow):
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
+
         self.browse_dialog = QFileDialog(self)
         self.browse_dialog.setNameFilter('SCAN files (*.json *.cf)')
         self.browse_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
@@ -214,7 +215,7 @@ class CloudflareDNS(QMainWindow):
             self.load_input_values()
             
     def setupUi(self):
-        self.setFixedSize(700, 400)
+        self.setFixedSize(700, 405)
         self.setWindowTitle("CloudflareDNS")
         self.setWindowIcon(QIcon(icon))
         self.label_1 = QLabel(self)
@@ -238,7 +239,7 @@ class CloudflareDNS(QMainWindow):
 
         self.listButton = QPushButton(self)        # list button
         self.listButton.setGeometry(5, 160, 40, 40)
-        self.listButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.listButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.listButton.setIcon(QIcon(listpng))
         self.listButton.setIconSize(QSize(48, 50))
         self.listButton.clicked.connect(self.list_clicked)
@@ -247,7 +248,7 @@ class CloudflareDNS(QMainWindow):
         self.createButton.setGeometry(165, 160, 40, 40)
         self.createButton.setIcon(QIcon(createpng))
         self.createButton.setIconSize((QSize(44, 44)))
-        self.createButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.createButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.createButton.clicked.connect(self.create_clicked)
 
 
@@ -255,12 +256,12 @@ class CloudflareDNS(QMainWindow):
         self.deleteButton.setGeometry(215, 160, 40, 40)
         self.deleteButton.setIcon(QIcon(deletepng))
         self.deleteButton.setIconSize((QSize(46, 46)))
-        self.deleteButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.deleteButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.deleteButton.clicked.connect(self.delete_clicked)
 
         self.resultButton = QPushButton(self)   #result.json button
         self.resultButton.setGeometry(55, 160, 100, 40)
-        self.resultButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.resultButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.resultButton.setIcon(QIcon(output_file))
         self.resultButton.setIconSize(QSize(90, 90))
         self.resultButton.clicked.connect(self.get_file_path)
@@ -288,45 +289,60 @@ class CloudflareDNS(QMainWindow):
 
     def table(self):
         self.tableWidget = QTableWidget(self)
-        self.tableWidget.setGeometry(265, 10, 420, 390)
+        self.tableWidget.setGeometry(270, 22, 420, 390)
         self.tableWidget.setColumnCount(3)
         self.tableWidget.setRowCount(1000)
+        self.tableWidget.setStyleSheet("border-radius : 10px")
         self.tableWidget.setHorizontalHeaderLabels(["Subdomain", "IP", "Message"])
-        self.tableWidget.horizontalHeaderItem(0).setFont(QFont("arial", 12, QFont.Weight.Bold))
+        self.tableWidget.horizontalHeaderItem(0).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
         self.tableWidget.horizontalHeaderItem(0).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.horizontalHeaderItem(1).setFont(QFont("arial", 12, QFont.Weight.Bold))
+        self.tableWidget.horizontalHeaderItem(1).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
         self.tableWidget.horizontalHeaderItem(1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.horizontalHeaderItem(2).setFont(QFont("arial", 12, QFont.Weight.Bold))
+        self.tableWidget.horizontalHeaderItem(2).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
         self.tableWidget.horizontalHeaderItem(2).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.setFixedHeight(380)  # fixed size of table
+        self.tableWidget.setFixedHeight(365)  # fixed size of table
         self.tableWidget.horizontalHeaderItem
-        self.tableWidget.setColumnWidth(0, 180)
-        self.tableWidget.setColumnWidth(1, 85)
-        self.tableWidget.setColumnWidth(2, 100)
-        
-        
+        self.tableWidget.setColumnWidth(0, 170)
+        self.tableWidget.setColumnWidth(1, 105)
+        self.tableWidget.setColumnWidth(2, 90)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setPen(QPen(Qt.GlobalColor.black, 4))
+        painter.drawRoundedRect(265, 10, 430, 390, 20, 20)
+
     def email(self):                                # set user id
         self.input_text = QLineEdit(self)
         self.input_text.setObjectName("email")
         self.input_text.setGeometry(5, 10, 250, 25)
+        self.input_text.setFont(QFont("Comic Sans MS", 10, QFont.Weight.Bold))
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.input_text.setPlaceholderText("example@mail.com")
     def api_token(self):
         self.input_text = QLineEdit(self)
         self.input_text.setObjectName("api_token")
+        self.input_text.setFont(QFont("Comic Sans MS", 9, QFont.Weight.Bold))
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.input_text.setGeometry(5, 40, 250, 25)
         self.input_text.setPlaceholderText("Global API Key")
     def zone_id(self):
         self.input_text = QLineEdit(self)
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
+        self.input_text.setFont(QFont("Comic Sans MS", 9, QFont.Weight.Bold))
         self.input_text.setObjectName("zone_id")
         self.input_text.setGeometry(5, 70, 250, 25)
         self.input_text.setPlaceholderText("Zone ID")
     def domain(self):
         self.input_text = QLineEdit(self)
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
+        self.input_text.setFont(QFont("Comic Sans MS", 10, QFont.Weight.Bold))
         self.input_text.setObjectName("domain")
         self.input_text.setGeometry(5, 100, 250, 25)
         self.input_text.setPlaceholderText("mydomain.com")
     def name(self):
         self.input_text = QLineEdit(self)
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
+        self.input_text.setFont(QFont("Comic Sans MS", 10, QFont.Weight.Bold))
         self.input_text.setObjectName("name")
         self.input_text.setGeometry(5, 130, 250, 25)
         self.input_text.setPlaceholderText("DNS record name")
@@ -357,10 +373,13 @@ class CloudflareDNS(QMainWindow):
         row_num, subdomain, ip, message = data[0], data[1], data[2], data[3]
         item_subdomain = QTableWidgetItem(subdomain)
         item_subdomain.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        item_subdomain.setFont(QFont("Comic Sans MS", 10))
         item_ip = QTableWidgetItem(ip)
         item_ip.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        item_ip.setFont(QFont("Comic Sans MS", 10))
         item_message = QTableWidgetItem(message)
         item_message.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        item_message.setFont(QFont("Comic Sans MS", 10))
         self.tableWidget.setItem(row_num, 0, item_subdomain)
         self.tableWidget.setItem(row_num, 1, item_ip)
         self.tableWidget.setItem(row_num, 2, item_message)
