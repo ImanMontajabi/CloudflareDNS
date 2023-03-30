@@ -13,13 +13,17 @@ from PyQt6.QtWidgets import (
      QTableWidget,
      QTableWidgetItem,
      QFileDialog,
-     QLineEdit)
+     QLineEdit
+     )
 
 base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
 icon = os.path.join(base_path, './assets/logo.png')
 github = os.path.join(base_path, './assets/github.png')
 twitter = os.path.join(base_path, './assets/twitter.png')
-jfile = os.path.join(base_path, './assets/file.png')
+output_file = os.path.join(base_path, './assets/file.png')
+listpng = os.path.join(base_path, './assets/list.png')
+createpng = os.path.join(base_path, './assets/create.png')
+deletepng = os.path.join(base_path, './assets/delete.png')
 max_ips = 100
 
 class Worker(QObject):
@@ -232,29 +236,35 @@ class CloudflareDNS(QMainWindow):
         self.name()
         self.table()
 
-        self.listButton = QPushButton("List", self)        # list button
-        self.listButton.setGeometry(5, 208, 70, 45)
-        self.listButton.setFont(QFont("arial", 16))
+        self.listButton = QPushButton(self)        # list button
+        self.listButton.setGeometry(5, 160, 40, 40)
+        self.listButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.listButton.setIcon(QIcon(listpng))
+        self.listButton.setIconSize(QSize(48, 50))
         self.listButton.clicked.connect(self.list_clicked)
         
-        self.createButton = QPushButton("Create", self)        # create button
-        self.createButton.setGeometry(95, 208, 70, 45)
-        self.createButton.setFont(QFont("arial", 16))
+        self.createButton = QPushButton(self)        # create button
+        self.createButton.setGeometry(165, 160, 40, 40)
+        self.createButton.setIcon(QIcon(createpng))
+        self.createButton.setIconSize((QSize(44, 44)))
+        self.createButton.setStyleSheet("border-radius : 10; border : 2px solid black")
         self.createButton.clicked.connect(self.create_clicked)
 
 
-        self.deleteButton = QPushButton("Delete", self)        # delete button
-        self.deleteButton.setGeometry(185, 208, 70, 45)
-        self.deleteButton.setFont(QFont("arial", 16))
+        self.deleteButton = QPushButton(self)        # delete button
+        self.deleteButton.setGeometry(215, 160, 40, 40)
+        self.deleteButton.setIcon(QIcon(deletepng))
+        self.deleteButton.setIconSize((QSize(46, 46)))
+        self.deleteButton.setStyleSheet("border-radius : 10; border : 2px solid black")
         self.deleteButton.clicked.connect(self.delete_clicked)
 
-        self.jsonbutton = QPushButton("result: .josn | .cf", self)   #result.json button
-        self.jsonbutton.setGeometry(5, 160, 250, 45)
-        self.jsonbutton.setFont(QFont("arial", 16))
-        self.jsonbutton.setIcon(QIcon(jfile))
-        self.jsonbutton.setIconSize(QSize(22, 22))
-        self.jsonbutton.clicked.connect(self.get_file_path)
-        self.jsonbutton.clicked.connect(self.refresh_buttons)
+        self.resultButton = QPushButton(self)   #result.json button
+        self.resultButton.setGeometry(55, 160, 100, 40)
+        self.resultButton.setStyleSheet("border-radius : 10; border : 2px solid black")
+        self.resultButton.setIcon(QIcon(output_file))
+        self.resultButton.setIconSize(QSize(90, 90))
+        self.resultButton.clicked.connect(self.get_file_path)
+        self.resultButton.clicked.connect(self.refresh_buttons)
 
         
     def get_file_path(self):
@@ -372,8 +382,8 @@ class CloudflareDNS(QMainWindow):
         self.thread.finished.connect(lambda:self.refresh_buttons())
         self.deleteButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.deleteButton.setEnabled(True))
-        self.jsonbutton.setEnabled(False)
-        self.thread.finished.connect(lambda:self.jsonbutton.setEnabled(True))
+        self.resultButton.setEnabled(False)
+        self.thread.finished.connect(lambda:self.resultButton.setEnabled(True))
         
     def create_clicked(self):
         self.save_input_values()
@@ -393,8 +403,8 @@ class CloudflareDNS(QMainWindow):
         self.thread.finished.connect(lambda:self.createButton.setEnabled(True))
         self.deleteButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.deleteButton.setEnabled(True))
-        self.jsonbutton.setEnabled(False)
-        self.thread.finished.connect(lambda:self.jsonbutton.setEnabled(True))
+        self.resultButton.setEnabled(False)
+        self.thread.finished.connect(lambda:self.resultButton.setEnabled(True))
 
     def delete_clicked(self):
         self.save_input_values()       
@@ -413,8 +423,8 @@ class CloudflareDNS(QMainWindow):
         self.thread.finished.connect(lambda:self.refresh_buttons())
         self.deleteButton.setEnabled(False)
         self.thread.finished.connect(lambda:self.deleteButton.setEnabled(True))
-        self.jsonbutton.setEnabled(False)
-        self.thread.finished.connect(lambda:self.jsonbutton.setEnabled(True))
+        self.resultButton.setEnabled(False)
+        self.thread.finished.connect(lambda:self.resultButton.setEnabled(True))
 
 app = QApplication(sys.argv)
 window = CloudflareDNS()
