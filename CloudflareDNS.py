@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QColor, QPen
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen
 from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt
 import sys
 import os
@@ -48,6 +48,7 @@ class Worker(QObject):
         }
         dns_records = []
         page_num = 1
+        export_list = []
         while True:  # loop over all pages
             params = {'page': page_num, 'per_page': 100}  # update pagination params
             response = requests.request('GET', url, headers=headers, params=params)
@@ -58,14 +59,18 @@ class Worker(QObject):
                 dns_records.append(record)
             page_num += 1
         i_num = 0
-        for record in dns_records:
+        for number, record in enumerate(dns_records):
             subdomain = record['name']
             this_domain = record['zone_name']
             this_dns_record = subdomain.replace(f".{this_domain}", "")
             if this_dns_record == dns_record_name:
                 content = record['content']
+                export_list.append(f"{number} - {content}")  # export all ips of subdomail
                 self.progress.emit((i_num, subdomain, content,"succeed", ""))
                 i_num += 1
+        with open(f"{dns_record_name}.{domain}.txt", "w") as f:
+            f.write("\n".join(export_list))
+            f.close()
             self.finished.emit()
         self.finished.emit()
 # ===================================================================================
