@@ -282,41 +282,42 @@ class CloudflareDNS(QMainWindow):
         self.domain()
         self.name()
         self.table()
+        self.maxip()
 
         self.listButton = QPushButton(self)        # list button
-        self.listButton.setGeometry(5, 160, 40, 40)
+        self.listButton.setGeometry(5, 160, 37, 37)
         self.listButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.listButton.setIcon(QIcon(listpng))
-        self.listButton.setIconSize(QSize(48, 50))
+        self.listButton.setIconSize(QSize(45, 48))
         self.listButton.clicked.connect(self.list_clicked)
 
         self.exportlistButton = QPushButton(self)        # list button
-        self.exportlistButton.setGeometry(11, 204, 28, 28)
+        self.exportlistButton.setGeometry(46, 160, 37, 37)
         self.exportlistButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.exportlistButton.setIcon(QIcon(exportpng))
-        self.exportlistButton.setIconSize(QSize(28, 28))
+        self.exportlistButton.setIconSize(QSize(37, 28))
         self.exportlistButton.clicked.connect(self.exportlist_clicked)
         
         self.createButton = QPushButton(self)        # create button
-        self.createButton.setGeometry(165, 160, 40, 40)
+        self.createButton.setGeometry(175, 160, 37, 37)
         self.createButton.setIcon(QIcon(createpng))
-        self.createButton.setIconSize((QSize(44, 44)))
+        self.createButton.setIconSize((QSize(40, 40)))
         self.createButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.createButton.clicked.connect(self.create_clicked)
 
 
         self.deleteButton = QPushButton(self)        # delete button
-        self.deleteButton.setGeometry(215, 160, 40, 40)
+        self.deleteButton.setGeometry(215, 160, 37, 37)
         self.deleteButton.setIcon(QIcon(deletepng))
-        self.deleteButton.setIconSize((QSize(46, 46)))
+        self.deleteButton.setIconSize((QSize(43, 43)))
         self.deleteButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.deleteButton.clicked.connect(self.delete_clicked)
 
         self.resultButton = QPushButton(self)   #result.json button
-        self.resultButton.setGeometry(55, 160, 100, 40)
+        self.resultButton.setGeometry(90, 160, 80, 37)
         self.resultButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.resultButton.setIcon(QIcon(output_file))
-        self.resultButton.setIconSize(QSize(90, 90))
+        self.resultButton.setIconSize(QSize(70, 70))
         self.resultButton.clicked.connect(self.get_file_path)
         self.resultButton.clicked.connect(self.refresh_buttons)
 
@@ -399,6 +400,14 @@ class CloudflareDNS(QMainWindow):
         self.input_text.setObjectName("name")
         self.input_text.setGeometry(5, 130, 250, 25)
         self.input_text.setPlaceholderText("DNS record name")
+    def maxip(self):
+        self.input_text = QLineEdit(self)
+        self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
+        self.input_text.setFont(QFont("Comic Sans MS", 8, QFont.Weight.Bold))
+        self.input_text.setObjectName("maxip")
+        self.input_text.setGeometry(5, 205, 135, 25)
+        self.input_text.setPlaceholderText("default max ip is 100")
+
     def load_input_values(self):
         with open('user_id.json', 'r') as f:
             user_data = json.load(f)
