@@ -166,7 +166,6 @@ class Worker(QObject):
             lines = ip.readlines()
         topUnder100ipList = [line.strip() for line in lines]
 
-
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
         email = user_data['email']
@@ -179,8 +178,6 @@ class Worker(QObject):
         except:
             max_ip_user = len(topUnder100ipList)
 
-
-
         params_name = f'{record_name}.{domain}'
         url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
         headers = {
@@ -189,13 +186,6 @@ class Worker(QObject):
                     "X-Auth-Key": api_token
                 }
         ipn = 0
-
-
-        
-
-
-
-
         while(ipn < len(topUnder100ipList)):
             data = {
                 "type": "A",
