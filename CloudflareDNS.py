@@ -116,6 +116,14 @@ class Worker(QObject):
         self.finished.emit()
 # ===================================================================================
     def create(self):
+        with open('user_id.json', 'r') as json_file:
+            user_data = json.load(json_file)
+        email = user_data['email']
+        api_token = user_data['api_token']
+        zone_id = user_data['zone_id']
+        record_name = user_data["ip_dns_record"]
+        domain = user_data["domain"]
+        lenscan = int(user_data["max_ip"])
         def scan_to_iplist():
             with open(self.json_path_create, 'r') as f:
                 data = json.load(f)
@@ -146,7 +154,6 @@ class Worker(QObject):
                 return myip
 
         all_ips = ip_list()
-        lenscan = len(all_ips)
         def bestip():
             filename = "best_ip.txt"
             topUnder100ip = []
@@ -165,13 +172,7 @@ class Worker(QObject):
         with open("best_ip.txt", "r") as ip:
             lines = ip.readlines()
         topUnder100ipList = [line.strip() for line in lines]
-        with open('user_id.json', 'r') as json_file:
-            user_data = json.load(json_file)
-        email = user_data['email']
-        api_token = user_data['api_token']
-        zone_id = user_data['zone_id']
-        record_name = user_data["ip_dns_record"]
-        domain = user_data["domain"]
+
         params_name = f'{record_name}.{domain}'
         url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
         headers = {
@@ -314,7 +315,7 @@ class CloudflareDNS(QMainWindow):
         self.deleteButton.clicked.connect(self.delete_clicked)
 
         self.resultButton = QPushButton(self)   #result.json button
-        self.resultButton.setGeometry(90, 160, 80, 37)
+        self.resultButton.setGeometry(87, 160, 85, 37)
         self.resultButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.resultButton.setIcon(QIcon(output_file))
         self.resultButton.setIconSize(QSize(70, 70))
@@ -405,8 +406,8 @@ class CloudflareDNS(QMainWindow):
         self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.input_text.setFont(QFont("Comic Sans MS", 8, QFont.Weight.Bold))
         self.input_text.setObjectName("maxip")
-        self.input_text.setGeometry(5, 205, 135, 25)
-        self.input_text.setPlaceholderText("default max ip is 100")
+        self.input_text.setGeometry(5, 205, 90, 25)
+        self.input_text.setPlaceholderText("1≤max ip≤100")
 
     def load_input_values(self):
         with open('user_id.json', 'r') as f:
@@ -416,6 +417,7 @@ class CloudflareDNS(QMainWindow):
         self.findChild(QLineEdit, "zone_id").setText(user_data['zone_id'])
         self.findChild(QLineEdit, "domain").setText(user_data['domain'])
         self.findChild(QLineEdit, "name").setText(user_data['ip_dns_record'])
+        self.findChild(QLineEdit, "maxip").setText(user_data['max_ip'])
         self.refresh_buttons()
 
     def get_input_values(self):
@@ -425,6 +427,7 @@ class CloudflareDNS(QMainWindow):
         user_data['zone_id'] = self.findChild(QLineEdit, "zone_id").text()
         user_data['domain'] = self.findChild(QLineEdit, "domain").text()
         user_data['ip_dns_record'] = self.findChild(QLineEdit, "name").text()
+        user_data['max_ip'] = self.findChild(QLineEdit, "maxip").text()
         return user_data
     def save_input_values(self):
         with open('user_id.json', 'w') as f:
