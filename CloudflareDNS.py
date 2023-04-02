@@ -115,15 +115,7 @@ class Worker(QObject):
             self.finished.emit()
         self.finished.emit()
 # ===================================================================================
-    def create(self):
-        with open('user_id.json', 'r') as json_file:
-            user_data = json.load(json_file)
-        email = user_data['email']
-        api_token = user_data['api_token']
-        zone_id = user_data['zone_id']
-        record_name = user_data["ip_dns_record"]
-        domain = user_data["domain"]
-        lenscan = int(user_data["max_ip"])
+    def create(self): 
         def scan_to_iplist():
             with open(self.json_path_create, 'r') as f:
                 data = json.load(f)
@@ -154,12 +146,13 @@ class Worker(QObject):
                 return myip
 
         all_ips = ip_list()
+        len_all_ips = len(all_ips)
         def bestip():
             filename = "best_ip.txt"
             topUnder100ip = []
             
             ipn = 0
-            while(ipn < lenscan): 
+            while(ipn < len_all_ips): 
                 topUnder100ip.append(all_ips[ipn])
                 ipn += 1
                 if  ipn >= max_ips:
@@ -173,6 +166,21 @@ class Worker(QObject):
             lines = ip.readlines()
         topUnder100ipList = [line.strip() for line in lines]
 
+
+        with open('user_id.json', 'r') as json_file:
+            user_data = json.load(json_file)
+        email = user_data['email']
+        api_token = user_data['api_token']
+        zone_id = user_data['zone_id']
+        record_name = user_data["ip_dns_record"]
+        domain = user_data["domain"]
+        try:
+            max_ip_user = int(user_data["max_ip"])
+        except:
+            max_ip_user = len(topUnder100ipList)
+
+
+
         params_name = f'{record_name}.{domain}'
         url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
         headers = {
@@ -182,7 +190,13 @@ class Worker(QObject):
                 }
         ipn = 0
 
-        while(ipn < lenscan):
+
+        
+
+
+
+
+        while(ipn < len(topUnder100ipList)):
             data = {
                 "type": "A",
                 "name": params_name,
@@ -190,6 +204,8 @@ class Worker(QObject):
                 "ttl": 1,
                 "proxied": False
             }
+            if (ipn >= max_ip_user):
+                break
             response = requests.post(url, headers=headers, json=data)
             if response.status_code == 200:
                 subdomain = response.json()["result"]["name"]
