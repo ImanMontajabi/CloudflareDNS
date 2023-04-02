@@ -24,7 +24,7 @@ pip install auto-py-to-exe
 ```
 or easy way:
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt --use-pep517
 ```
 Then, clone the repository using git:
 ```
