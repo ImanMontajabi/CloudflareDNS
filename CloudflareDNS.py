@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen
-from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen, QIntValidator, QRegularExpressionValidator
+from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt, QRegularExpression
 import sys
 import os
 import re
@@ -404,6 +404,9 @@ class CloudflareDNS(QMainWindow):
     def maxip(self):
         self.input_text = QLineEdit(self)
         self.input_text.setStyleSheet("border-radius : 10px; border : 2px solid black")
+        reg_ex = QRegularExpression("(?!0)\\d{1,2}|100")
+        validator = QRegularExpressionValidator(reg_ex, self.input_text)
+        self.input_text.setValidator(validator)
         self.input_text.setFont(QFont("Comic Sans MS", 8, QFont.Weight.Bold))
         self.input_text.setObjectName("maxip")
         self.input_text.setGeometry(5, 205, 90, 25)
