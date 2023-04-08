@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen, QIntValidator, QRegularExpressionValidator
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen, QRegularExpressionValidator
 from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt, QRegularExpression
 import sys
 import os
