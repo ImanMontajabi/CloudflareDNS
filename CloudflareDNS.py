@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QPen, QRegularExpressionValidator
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QRegularExpressionValidator
 from PyQt6.QtCore import QSize, QObject, QThread, pyqtSignal, Qt, QRegularExpression
 import sys
 import os
@@ -10,10 +10,9 @@ from PyQt6.QtWidgets import (
      QMainWindow,
      QLabel,
      QPushButton,
-     QTableWidget,
-     QTableWidgetItem,
      QFileDialog,
-     QLineEdit
+     QLineEdit,
+     QPlainTextEdit
      )
 
 base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
@@ -65,11 +64,11 @@ class Worker(QObject):
             this_dns_record = subdomain.replace(f".{this_domain}", "")
             if this_dns_record == dns_record_name:
                 content = record['content']
-                self.progress.emit((i_num, subdomain, content,"succeed", ""))
+                self.progress.emit((i_num + 1, subdomain, content, ""))
                 i_num += 1
             self.finished.emit()
         self.finished.emit()
-# export list ==================================================================
+# export list 
     def export_list(self):
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
@@ -107,14 +106,14 @@ class Worker(QObject):
             if this_dns_record == dns_record_name:
                 content = record['content']
                 export_list.append(f"{number} - {content}")
-                self.progress.emit((i_num, subdomain, content,"succeed", ""))
+                self.progress.emit((i_num + 1, subdomain, content,"✓"))
                 i_num += 1
         with open(f"{dns_record_name}.{domain}.txt", "w") as f:
             f.write("\n".join(export_list))
             f.close()
             self.finished.emit()
         self.finished.emit()
-# ===================================================================================
+# craete DNS record from scan file
     def create(self): 
         def scan_to_iplist():
             with open(self.json_path_create, 'r') as f:
@@ -200,12 +199,12 @@ class Worker(QObject):
             if response.status_code == 200:
                 subdomain = response.json()["result"]["name"]
                 message_content = response.json()["result"]["content"]
-                self.progress.emit((ipn, subdomain, message_content,"added", ""))
+                self.progress.emit((ipn + 1, subdomain, message_content," ✓ added"))
                 ipn += 1
             if response.status_code == 400:
                 subdomain = f"{record_name}.{domain}"
                 message_content = topUnder100ipList[ipn]    
-                self.progress.emit((ipn, subdomain, message_content,"already exist", ""))
+                self.progress.emit((ipn + 1, subdomain, message_content, " ✘ exist"))
                 ipn += 1
             if  ipn >= max_ips:
                 break
@@ -239,36 +238,30 @@ class Worker(QObject):
                 if record["name"] == f"{dns_record_name}.{domain}":
                     url_del = f"{url}/{record['id']}"
                     requests.delete(url_del, headers=headers)
-                    self.progress.emit((i_num, record["name"], record["content"], "deleted", ""))
+                    self.progress.emit((i_num + 1, record["name"], record["content"], " ✓ deleted"))
                     i_num += 1
             page_num += 1
         self.finished.emit()
-#=============================================================================
+# Main WindowApp
 class CloudflareDNS(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi()
+# open file dialog window to select result file
         self.createButton.setEnabled(False)
         self.json_path_create = None
-        self.thread = QThread()
-        self.worker = Worker()
-        self.worker.moveToThread(self.thread)
-        self.worker.progress.connect(self.update_table)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-
-
         self.browse_dialog = QFileDialog(self)
         self.browse_dialog.setNameFilter('SCAN files (*.json *.cf)')
         self.browse_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         self.browse_dialog.fileSelected.connect(self.open_file)
+# open user_id file
         file_path = 'user_id.json'
         if os.path.exists(file_path):
             self.load_input_values()
-            
+# setup UI of main Window 
     def setupUi(self):
-        self.setFixedSize(700, 405)
+        self.setFixedSize(260, 405)
+        self.move(5, 5)
         self.setWindowTitle("CloudflareDNS")
         self.setWindowIcon(QIcon(icon))
         self.label_1 = QLabel(self)
@@ -288,7 +281,7 @@ class CloudflareDNS(QMainWindow):
         self.zone_id()
         self.domain()
         self.name()
-        self.table()
+        self.show_output()
         self.maxip()
 
         self.listButton = QPushButton(self)        # list button
@@ -311,16 +304,15 @@ class CloudflareDNS(QMainWindow):
         self.createButton.setIconSize((QSize(40, 40)))
         self.createButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.createButton.clicked.connect(self.create_clicked)
-
-
-        self.deleteButton = QPushButton(self)        # delete button
+        # delete button
+        self.deleteButton = QPushButton(self)        
         self.deleteButton.setGeometry(215, 160, 37, 37)
         self.deleteButton.setIcon(QIcon(deletepng))
         self.deleteButton.setIconSize((QSize(43, 43)))
         self.deleteButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.deleteButton.clicked.connect(self.delete_clicked)
-
-        self.resultButton = QPushButton(self)   #result.json button
+        #result.json button
+        self.resultButton = QPushButton(self)   
         self.resultButton.setGeometry(87, 160, 85, 37)
         self.resultButton.setStyleSheet("border-radius : 10px; border : 2px solid black")
         self.resultButton.setIcon(QIcon(output_file))
@@ -347,32 +339,16 @@ class CloudflareDNS(QMainWindow):
         if self.json_path_create:
             is_create_enabled = True
         self.createButton.setEnabled(is_create_enabled)
-
-    def table(self):
-        self.tableWidget = QTableWidget(self)
-        self.tableWidget.setGeometry(270, 22, 420, 390)
-        self.tableWidget.setColumnCount(3)
-        self.tableWidget.setRowCount(1000)
-        self.tableWidget.setStyleSheet("border-radius : 10px")
-        self.tableWidget.setHorizontalHeaderLabels(["Subdomain", "IP", "Message"])
-        self.tableWidget.horizontalHeaderItem(0).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
-        self.tableWidget.horizontalHeaderItem(0).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.horizontalHeaderItem(1).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
-        self.tableWidget.horizontalHeaderItem(1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.horizontalHeaderItem(2).setFont(QFont("Comic Sans MS", 12, QFont.Weight.Bold))
-        self.tableWidget.horizontalHeaderItem(2).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tableWidget.setFixedHeight(365)  # fixed size of table
-        self.tableWidget.horizontalHeaderItem
-        self.tableWidget.setColumnWidth(0, 170)
-        self.tableWidget.setColumnWidth(1, 105)
-        self.tableWidget.setColumnWidth(2, 90)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setPen(QPen(Qt.GlobalColor.black, 4))
-        painter.drawRoundedRect(265, 10, 430, 390, 20, 20)
-
-    def email(self):                                # set user id
+# show output in a QPlainText
+    def show_output(self):
+        self.otext = QPlainTextEdit(self)
+        self.otext.setGeometry(5, 240, 250, 120)
+        self.otext.setStyleSheet("background-color: black; color: white; border-radius : 10px")
+        self.otext.setFont(QFont("Cascadia Code", 10))
+        self.otext.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.otext.setReadOnly(True)
+# set user id in user_id file
+    def email(self):                                
         self.input_text = QLineEdit(self)
         self.input_text.setObjectName("email")
         self.input_text.setGeometry(5, 10, 250, 25)
@@ -442,28 +418,18 @@ class CloudflareDNS(QMainWindow):
         with open('user_id.json', 'w') as f:
             json.dump(self.get_input_values(), f)
 
-    
-    def update_table(self, data):
-        row_num, subdomain, ip, message = data[0], data[1], data[2], data[3]
-        item_subdomain = QTableWidgetItem(subdomain)
-        item_subdomain.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        item_subdomain.setFont(QFont("Comic Sans MS", 10))
-        item_ip = QTableWidgetItem(ip)
-        item_ip.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        item_ip.setFont(QFont("Comic Sans MS", 10))
-        item_message = QTableWidgetItem(message)
-        item_message.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        item_message.setFont(QFont("Comic Sans MS", 10))
-        self.tableWidget.setItem(row_num, 0, item_subdomain)
-        self.tableWidget.setItem(row_num, 1, item_ip)
-        self.tableWidget.setItem(row_num, 2, item_message)
+    def update_text(self, data):
+        row_num, ip, message = data[0], data[2], data[3]
+        text = f"{row_num}) {ip} {message}\n"
+        self.otext.insertPlainText(text)
         
     def list_clicked(self):
         self.save_input_values()
         self.thread = QThread()
         self.worker = Worker()
+        self.otext.clear()
         self.worker.moveToThread(self.thread)
-        self.worker.progress.connect(self.update_table)
+        self.worker.progress.connect(self.update_text)
         self.thread.started.connect(self.worker.list)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -484,8 +450,9 @@ class CloudflareDNS(QMainWindow):
         self.save_input_values()
         self.thread = QThread()
         self.worker = Worker()
+        self.otext.clear()
         self.worker.moveToThread(self.thread)
-        self.worker.progress.connect(self.update_table)
+        self.worker.progress.connect(self.update_text)
         self.thread.started.connect(self.worker.export_list)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -506,9 +473,10 @@ class CloudflareDNS(QMainWindow):
         self.save_input_values()
         self.thread = QThread()
         self.worker = Worker()
+        self.otext.clear()
         self.worker.json_path_create = self.json_path
         self.worker.moveToThread(self.thread)
-        self.worker.progress.connect(self.update_table)
+        self.worker.progress.connect(self.update_text)
         self.thread.started.connect(self.worker.create)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -529,8 +497,9 @@ class CloudflareDNS(QMainWindow):
         self.save_input_values()       
         self.thread = QThread()
         self.worker = Worker()
+        self.otext.clear()
         self.worker.moveToThread(self.thread)
-        self.worker.progress.connect(self.update_table)
+        self.worker.progress.connect(self.update_text)
         self.thread.started.connect(self.worker.delete)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
