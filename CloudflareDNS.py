@@ -68,8 +68,8 @@ class Worker(QObject):
                 i_num += 1
             self.finished.emit()
         self.finished.emit()
-# export list 
-    def export_list(self):
+# export json 
+    def export_json(self):
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
 
@@ -88,7 +88,11 @@ class Worker(QObject):
             }
         dns_records = []
         page_num = 1
-        export_list = []
+        export_json = {}
+        export_json["workingIPs"] = []
+        #make json files with IPs and <<< same Dataed >>> # TODO change the Dates
+        export_json["startDate"] = "2023-04-04T10:41:35.5737055-07:00"
+        export_json["endDate"] = "2023-04-04T10:41:35.5737056-07:05"
         while True:  # loop over all pages
             params = {'page': page_num, 'per_page': 100}  # update pagination params
             response = requests.request('GET', url, headers=headers, params=params)
@@ -105,11 +109,15 @@ class Worker(QObject):
             this_dns_record = subdomain.replace(f".{this_domain}", "")
             if this_dns_record == dns_record_name:
                 content = record['content']
-                export_list.append(f"{number} - {content}")
+                #add dns record working ips to json file
+                export_json["workingIPs"].append({"delay": number, "ip": content})
                 self.progress.emit((i_num + 1, subdomain, content,"✓"))
                 i_num += 1
-        with open(f"{dns_record_name}.{domain}.txt", "w") as f:
-            f.write("\n".join(export_list))
+        export_json["totalFoundWorkingIPs"] = i_num
+        export_json["totalFoundWorkingIPsCurrentRange"] = i_num
+
+        with open(f"{dns_record_name}.{domain}.json", "w") as f:
+            json.dump(export_json, f)
             f.close()
             self.finished.emit()
         self.finished.emit()
@@ -209,7 +217,7 @@ class Worker(QObject):
             if  ipn >= max_ips:
                 break
         self.finished.emit()
-        # ===================================================================================
+# delete all ips of sumdomain
     def delete(self):
         with open('user_id.json', 'r') as json_file:
             user_data = json.load(json_file)
@@ -453,7 +461,7 @@ class CloudflareDNS(QMainWindow):
         self.otext.clear()
         self.worker.moveToThread(self.thread)
         self.worker.progress.connect(self.update_text)
-        self.thread.started.connect(self.worker.export_list)
+        self.thread.started.connect(self.worker.export_json)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
