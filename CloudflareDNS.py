@@ -68,7 +68,7 @@ class Worker(QObject):
                         self.progress.emit((i_num + 1, subdomain, content, ""))
                         i_num += 1
                     self.finished.emit()
-                self.finished.emit()
+            self.finished.emit()
         except:
             self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
             self.finished.emit()
