@@ -48,26 +48,30 @@ class Worker(QObject):
         }
         dns_records = []
         page_num = 1
-        while True:  # loop over all pages
-            params = {'page': page_num, 'per_page': 100}  # update pagination params
-            response = requests.request('GET', url, headers=headers, params=params)
-            data = response.json()['result']
-            if not data:  # no more records to fetch
-                break
-            for record in data:  # add records to the list
-                dns_records.append(record)
-            page_num += 1
-        i_num = 0
-        for record in dns_records:
-            subdomain = record['name']
-            this_domain = record['zone_name']
-            this_dns_record = subdomain.replace(f".{this_domain}", "")
-            if this_dns_record == dns_record_name:
-                content = record['content']
-                self.progress.emit((i_num + 1, subdomain, content, ""))
-                i_num += 1
+        try:
+            while True:  # loop over all pages
+                params = {'page': page_num, 'per_page': 100}  # update pagination params
+                response = requests.request('GET', url, headers=headers, params=params)
+                data = response.json()['result']
+                if not data:  # no more records to fetch
+                    break
+                for record in data:  # add records to the list
+                    dns_records.append(record)
+                page_num += 1
+                i_num = 0
+                for record in dns_records:
+                    subdomain = record['name']
+                    this_domain = record['zone_name']
+                    this_dns_record = subdomain.replace(f".{this_domain}", "")
+                    if this_dns_record == dns_record_name:
+                        content = record['content']
+                        self.progress.emit((i_num + 1, subdomain, content, ""))
+                        i_num += 1
+                    self.finished.emit()
+                self.finished.emit()
+        except:
+            self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
             self.finished.emit()
-        self.finished.emit()
 # export json 
     def export_json(self):
         with open('user_id.json', 'r') as json_file:
@@ -93,34 +97,38 @@ class Worker(QObject):
         #make json files with IPs and <<< same Dataed >>> # TODO change the Dates
         export_json["startDate"] = "2023-04-04T10:41:35.5737055-07:00"
         export_json["endDate"] = "2023-04-04T10:41:35.5737056-07:05"
-        while True:  # loop over all pages
-            params = {'page': page_num, 'per_page': 100}  # update pagination params
-            response = requests.request('GET', url, headers=headers, params=params)
-            data = response.json()['result']
-            if not data:  # no more records to fetch
-                    break
-            for record in data:  # add records to the list
-                dns_records.append(record)
-            page_num += 1
-        i_num = 0
-        for number, record in enumerate(dns_records):
-            subdomain = record['name']
-            this_domain = record['zone_name']
-            this_dns_record = subdomain.replace(f".{this_domain}", "")
-            if this_dns_record == dns_record_name:
-                content = record['content']
-                #add dns record working ips to json file
-                export_json["workingIPs"].append({"delay": number, "ip": content})
-                self.progress.emit((i_num + 1, subdomain, content,"✓"))
-                i_num += 1
-        export_json["totalFoundWorkingIPs"] = i_num
-        export_json["totalFoundWorkingIPsCurrentRange"] = i_num
+        try:
+            while True:  # loop over all pages
+                params = {'page': page_num, 'per_page': 100}  # update pagination params
+                response = requests.request('GET', url, headers=headers, params=params)
+                data = response.json()['result']
+                if not data:  # no more records to fetch
+                        break
+                for record in data:  # add records to the list
+                    dns_records.append(record)
+                page_num += 1
+            i_num = 0
+            for number, record in enumerate(dns_records):
+                subdomain = record['name']
+                this_domain = record['zone_name']
+                this_dns_record = subdomain.replace(f".{this_domain}", "")
+                if this_dns_record == dns_record_name:
+                    content = record['content']
+                    #add dns record working ips to json file
+                    export_json["workingIPs"].append({"delay": number, "ip": content})
+                    self.progress.emit((i_num + 1, subdomain, content,"✓"))
+                    i_num += 1
+            export_json["totalFoundWorkingIPs"] = i_num
+            export_json["totalFoundWorkingIPsCurrentRange"] = i_num
 
-        with open(f"{dns_record_name}.{domain}.json", "w") as f:
-            json.dump(export_json, f)
-            f.close()
+            with open(f"{dns_record_name}.{domain}.json", "w") as f:
+                json.dump(export_json, f)
+                f.close()
+                self.finished.emit()
             self.finished.emit()
-        self.finished.emit()
+        except:
+            self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
+            self.finished.emit()
 # craete DNS record from scan file
     def create(self): 
         def scan_to_iplist():
@@ -193,30 +201,34 @@ class Worker(QObject):
                     "X-Auth-Key": api_token
                 }
         ipn = 0
-        while(ipn < len(topUnder100ipList)):
-            data = {
-                "type": "A",
-                "name": params_name,
-                "content": f"{topUnder100ipList[ipn]}",
-                "ttl": 1,
-                "proxied": False
-            }
-            if (ipn >= max_ip_user):
-                break
-            response = requests.post(url, headers=headers, json=data)
-            if response.status_code == 200:
-                subdomain = response.json()["result"]["name"]
-                message_content = response.json()["result"]["content"]
-                self.progress.emit((ipn + 1, subdomain, message_content," ✓ added"))
-                ipn += 1
-            if response.status_code == 400:
-                subdomain = f"{record_name}.{domain}"
-                message_content = topUnder100ipList[ipn]    
-                self.progress.emit((ipn + 1, subdomain, message_content, " ✘ exist"))
-                ipn += 1
-            if  ipn >= max_ips:
-                break
-        self.finished.emit()
+        try: 
+            while(ipn < len(topUnder100ipList)):
+                data = {
+                    "type": "A",
+                    "name": params_name,
+                    "content": f"{topUnder100ipList[ipn]}",
+                    "ttl": 1,
+                    "proxied": False
+                }
+                if (ipn >= max_ip_user):
+                    break
+                response = requests.post(url, headers=headers, json=data)
+                if response.status_code == 200:
+                    subdomain = response.json()["result"]["name"]
+                    message_content = response.json()["result"]["content"]
+                    self.progress.emit((ipn + 1, subdomain, message_content," ✓ added"))
+                    ipn += 1
+                if response.status_code == 400:
+                    subdomain = f"{record_name}.{domain}"
+                    message_content = topUnder100ipList[ipn]    
+                    self.progress.emit((ipn + 1, subdomain, message_content, " ✘ exist"))
+                    ipn += 1
+                if  ipn >= max_ips:
+                    break
+            self.finished.emit()
+        except:
+            self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
+            self.finished.emit()
 # delete all ips of sumdomain
     def delete(self):
         with open('user_id.json', 'r') as json_file:
@@ -234,22 +246,26 @@ class Worker(QObject):
         'Content-Type': 'application/json'
         }
         page_num = 1
-        i_num = 0    
-        while True:
-            params = {"page": page_num,"per_page": 100}
-            response = requests.request("GET", url, headers=headers, params=params)
-            data = response.json()["result"]
-            if not data:
-                break
+        i_num = 0
+        try:   
+            while True:
+                params = {"page": page_num,"per_page": 100}
+                response = requests.request("GET", url, headers=headers, params=params)
+                data = response.json()["result"]
+                if not data:
+                    break
 
-            for record in data:
-                if record["name"] == f"{dns_record_name}.{domain}":
-                    url_del = f"{url}/{record['id']}"
-                    requests.delete(url_del, headers=headers)
-                    self.progress.emit((i_num + 1, record["name"], record["content"], " ✓ deleted"))
-                    i_num += 1
-            page_num += 1
-        self.finished.emit()
+                for record in data:
+                    if record["name"] == f"{dns_record_name}.{domain}":
+                        url_del = f"{url}/{record['id']}"
+                        requests.delete(url_del, headers=headers)
+                        self.progress.emit((i_num + 1, record["name"], record["content"], " ✓ deleted"))
+                        i_num += 1
+                page_num += 1
+            self.finished.emit()
+        except:
+            self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
+            self.finished.emit()
 # Main WindowApp
 class CloudflareDNS(QMainWindow):
     def __init__(self, parent=None):
@@ -427,9 +443,13 @@ class CloudflareDNS(QMainWindow):
             json.dump(self.get_input_values(), f)
 
     def update_text(self, data):
-        row_num, ip, message = data[0], data[2], data[3]
-        text = f"{row_num}) {ip} {message}\n"
-        self.otext.insertPlainText(text)
+        try:
+            row_num, ip, message = data[0], data[2], data[3]
+            text = f"{row_num}) {ip} {message}\n"
+            self.otext.insertPlainText(text)
+        except:
+            error_message = data[0]
+            self.otext.insertPlainText(error_message)
         
     def list_clicked(self):
         self.save_input_values()
