@@ -131,29 +131,62 @@ class Worker(QObject):
             self.finished.emit()
 # craete DNS record from scan file
     def create(self): 
+        #for .json files
         def scan_to_iplist():
             with open(self.json_path_create, 'r') as f:
                 data = json.load(f)
             ip_list = [i['ip'] for i in data['workingIPs']]
             f.close()
             return ip_list
+        
+        # for .cf files
         def linux_scan_to_iplist():
             with open(self.json_path_create, 'r') as f:
                 data = f.readlines()
-            ips = []
+            ip_list = []
             for item in data:        # iterate over the list items
                 result = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', item) # extract the IP using regular expression
                 if result:          # check if IP is found and add to the list
-                    ips.append(result.group(0))
-            return ips
-        def iplist_to_iptext():
-            try:
+                    ip_list.append(result.group(0))
+            return ip_list
+        
+        # for .csv files
+        def online_scan_to_iplist():
+            with open(self.json_path_create, 'r') as f:
+                data = f.readlines()
+            ip_list = []
+            for item in data:        # iterate over the list items
+                result = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', item) # extract the IP using regular expression
+                if result:          # check if IP is found and add to the list
+                    ip_list.append(result.group(0))
+            return ip_list
+        # open result file and save to list
+        try:
+            if  re.search(r'.+\.json$', self.json_path_create):
                 iplist = scan_to_iplist()
-            except:
-                iplist = linux_scan_to_iplist()
-            with open('ip.txt', 'w') as f:
+                if iplist == []:
+                    self.progress.emit(('file has no valid ip',))
+                    self.finished.emit()
+                with open('ip.txt', 'w') as f:
                     f.write('\n'.join(iplist))
-        iplist_to_iptext()
+            if  re.search(r'.+\.cf$', self.json_path_create):
+                iplist = linux_scan_to_iplist()
+                if iplist == []:
+                    self.progress.emit(('file has no valid ip',))
+                    self.finished.emit()
+                with open('ip.txt', 'w') as f:
+                    f.write('\n'.join(iplist))
+            if  re.search(r'.+\.csv$', self.json_path_create):
+                iplist = online_scan_to_iplist()
+                if iplist == []:
+                    self.progress.emit(('file has no valid ip',))
+                    self.finished.emit()
+                with open('ip.txt', 'w') as f:
+                    f.write('\n'.join(iplist))
+        except:
+            self.progress.emit(('Error\nunsupported file',))
+            self.finished.emit()
+
         def ip_list():
             with open ('ip.txt', 'r') as f:
                 myip = [line.strip() for line in f]
@@ -229,6 +262,7 @@ class Worker(QObject):
         except:
             self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
             self.finished.emit()
+        
 # delete all ips of sumdomain
     def delete(self):
         with open('user_id.json', 'r') as json_file:
@@ -275,7 +309,7 @@ class CloudflareDNS(QMainWindow):
         self.createButton.setEnabled(False)
         self.json_path_create = None
         self.browse_dialog = QFileDialog(self)
-        self.browse_dialog.setNameFilter('SCAN files (*.json *.cf)')
+        self.browse_dialog.setNameFilter('SCAN files (*.json *.cf *.csv)')
         self.browse_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         self.browse_dialog.fileSelected.connect(self.open_file)
 # open user_id file
@@ -347,7 +381,7 @@ class CloudflareDNS(QMainWindow):
         
     def get_file_path(self):
         file_dialog = QFileDialog(self)
-        file_dialog.setNameFilter('SCAN files (*.json *.cf)')
+        file_dialog.setNameFilter('SCAN files (*.json *.cf *.csv)')
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         file_dialog.fileSelected.connect(self.open_file)
         file_dialog.show()
