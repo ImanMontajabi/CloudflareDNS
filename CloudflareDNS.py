@@ -161,108 +161,113 @@ class Worker(QObject):
                     ip_list.append(result.group(0))
             return ip_list
         # open result file and save to list
+        no_error = True
         try:
             if  re.search(r'.+\.json$', self.json_path_create):
                 iplist = scan_to_iplist()
                 if iplist == []:
                     self.progress.emit(('file has no valid ip',))
-                    self.finished.emit()
-                with open('ip.txt', 'w') as f:
-                    f.write('\n'.join(iplist))
-            if  re.search(r'.+\.cf$', self.json_path_create):
+                    no_error = False
+                else:
+                    with open('ip.txt', 'w') as f:
+                        f.write('\n'.join(iplist))
+            elif  re.search(r'.+\.cf$', self.json_path_create):
                 iplist = linux_scan_to_iplist()
                 if iplist == []:
                     self.progress.emit(('file has no valid ip',))
-                    self.finished.emit()
-                with open('ip.txt', 'w') as f:
-                    f.write('\n'.join(iplist))
-            if  re.search(r'.+\.csv$', self.json_path_create):
+                    no_error = False
+                else:
+                    with open('ip.txt', 'w') as f:
+                        f.write('\n'.join(iplist))
+            elif  re.search(r'.+\.csv$', self.json_path_create):
                 iplist = online_scan_to_iplist()
                 if iplist == []:
                     self.progress.emit(('file has no valid ip',))
-                    self.finished.emit()
-                with open('ip.txt', 'w') as f:
-                    f.write('\n'.join(iplist))
+                    no_error = False
+                else:
+                    with open('ip.txt', 'w') as f:
+                        f.write('\n'.join(iplist))
         except:
             self.progress.emit(('Error\nunsupported file',))
-            self.finished.emit()
+            no_error = False
 
         def ip_list():
             with open ('ip.txt', 'r') as f:
                 myip = [line.strip() for line in f]
                 f.close()
                 return myip
+        if no_error:
+            all_ips = ip_list()
+            len_all_ips = len(all_ips)
+            def bestip():
+                filename = "best_ip.txt"
+                topUnder100ip = []
+                
+                ipn = 0
+                while(ipn < len_all_ips): 
+                    topUnder100ip.append(all_ips[ipn])
+                    ipn += 1
+                    if  ipn >= max_ips:
+                        break
 
-        all_ips = ip_list()
-        len_all_ips = len(all_ips)
-        def bestip():
-            filename = "best_ip.txt"
-            topUnder100ip = []
-            
+                with open(filename, "w") as f:
+                    f.write("\n".join(topUnder100ip))
+                f.close()
+            bestip()
+            with open("best_ip.txt", "r") as ip:
+                lines = ip.readlines()
+            topUnder100ipList = [line.strip() for line in lines]
+
+            with open('user_id.json', 'r') as json_file:
+                user_data = json.load(json_file)
+            email = user_data['email']
+            api_token = user_data['api_token']
+            zone_id = user_data['zone_id']
+            record_name = user_data["ip_dns_record"]
+            domain = user_data["domain"]
+            try:
+                max_ip_user = int(user_data["max_ip"])
+            except:
+                max_ip_user = len(topUnder100ipList)
+
+            params_name = f'{record_name}.{domain}'
+            url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
+            headers = {
+                        "Content-Type": "application/json",
+                        "X-Auth-Email": email,
+                        "X-Auth-Key": api_token
+                    }
             ipn = 0
-            while(ipn < len_all_ips): 
-                topUnder100ip.append(all_ips[ipn])
-                ipn += 1
-                if  ipn >= max_ips:
-                    break
-
-            with open(filename, "w") as f:
-                f.write("\n".join(topUnder100ip))
-            f.close()
-        bestip()
-        with open("best_ip.txt", "r") as ip:
-            lines = ip.readlines()
-        topUnder100ipList = [line.strip() for line in lines]
-
-        with open('user_id.json', 'r') as json_file:
-            user_data = json.load(json_file)
-        email = user_data['email']
-        api_token = user_data['api_token']
-        zone_id = user_data['zone_id']
-        record_name = user_data["ip_dns_record"]
-        domain = user_data["domain"]
-        try:
-            max_ip_user = int(user_data["max_ip"])
-        except:
-            max_ip_user = len(topUnder100ipList)
-
-        params_name = f'{record_name}.{domain}'
-        url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
-        headers = {
-                    "Content-Type": "application/json",
-                    "X-Auth-Email": email,
-                    "X-Auth-Key": api_token
-                }
-        ipn = 0
-        try: 
-            while(ipn < len(topUnder100ipList)):
-                data = {
-                    "type": "A",
-                    "name": params_name,
-                    "content": f"{topUnder100ipList[ipn]}",
-                    "ttl": 1,
-                    "proxied": False
-                }
-                if (ipn >= max_ip_user):
-                    break
-                response = requests.post(url, headers=headers, json=data)
-                if response.status_code == 200:
-                    subdomain = response.json()["result"]["name"]
-                    message_content = response.json()["result"]["content"]
-                    self.progress.emit((ipn + 1, subdomain, message_content," ✓ added"))
-                    ipn += 1
-                if response.status_code == 400:
-                    subdomain = f"{record_name}.{domain}"
-                    message_content = topUnder100ipList[ipn]    
-                    self.progress.emit((ipn + 1, subdomain, message_content, " ✘ exist"))
-                    ipn += 1
-                if  ipn >= max_ips:
-                    break
+            try: 
+                while(ipn < len(topUnder100ipList)):
+                    data = {
+                        "type": "A",
+                        "name": params_name,
+                        "content": f"{topUnder100ipList[ipn]}",
+                        "ttl": 1,
+                        "proxied": False
+                    }
+                    if (ipn >= max_ip_user):
+                        break
+                    response = requests.post(url, headers=headers, json=data)
+                    if response.status_code == 200:
+                        subdomain = response.json()["result"]["name"]
+                        message_content = response.json()["result"]["content"]
+                        self.progress.emit((ipn + 1, subdomain, message_content," ✓ added"))
+                        ipn += 1
+                    if response.status_code == 400:
+                        subdomain = f"{record_name}.{domain}"
+                        message_content = topUnder100ipList[ipn]    
+                        self.progress.emit((ipn + 1, subdomain, message_content, " ✘ exist"))
+                        ipn += 1
+                    if  ipn >= max_ips:
+                        break
+                self.finished.emit()
+            except:
+                self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
+                self.finished.emit()
+        else:
             self.finished.emit()
-        except:
-            self.progress.emit(("Error\nPlease check:\n- your Internet connection\n- your information",))
-            self.finished.emit()
-        
 # delete all ips of sumdomain
     def delete(self):
         with open('user_id.json', 'r') as json_file:
