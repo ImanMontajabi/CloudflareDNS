@@ -10,26 +10,16 @@ The application is built using the Python programming language and the Qt GUI to
 - License
 # Installation
 To use CloudflareDNS, Python 3 [installed](https://www.python.org/downloads/) must have on your system. You will need to install the following packages as dependencies:
+
 `requests` and `PyQt6`
 ```
-pip install requests
-```
-and:
-```
-pip install PyQt6
+pip install -r requirements.txt --use-pep517
 ```
 for create .exe file from this code:
 ```
 pip install auto-py-to-exe
 ```
-or easy way:
-```
-pip install -r requirements.txt --use-pep517
-```
-Then, clone the repository using git:
-```
-git clone https://github.com/ImanMontajabi/CloudflareDNS.git
-```
+
 # Usage
 To start the application, navigate to the cloned repository's directory on your machine and run the `CloudflareDNS.py` python file:
 ```
