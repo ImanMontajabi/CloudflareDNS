@@ -4,6 +4,11 @@
 CloudflareDNS is a Python-based graphical application that allows users to easily manage and modify DNS records on the popular cloud-hosting platform, Cloudflare. Using this application, users can quickly create, list, and delete DNS records associated with their domains on Cloudflare.
 
 The application is built using the Python programming language and the Qt GUI toolkit. The CloudflareDNS application uses Cloudflare's API to perform DNS record management operations, like creating, listing, and deleting DNS records.
+
+# Screenshot
+![230775628-6de0fcc1-d0fb-4de8-9620-0ee157dbbf0f](https://github.com/user-attachments/assets/1a91cdfb-fe23-4d81-80e6-0847448e3230)
+
+
 # Table of Contents
 - Installation
 - Usage
